@@ -2,7 +2,7 @@
 apply plugin: 'maven-publish'
 
 // 版本号
-version = '1.0.8'
+version = '1.0.9'
 
 def serverGroupId = 'com.autohome.svideo.tinker.plugin'
 def serverArtifactId = 'svideo_tinker_plugin'
@@ -23,10 +23,21 @@ task sourceJar(type: Jar) {
     archiveClassifier = "sources"
 }
 
+// 打包javadocJar任务
+task javadocJar(type: Jar) {
+    try {
+        from javadoc.destinationDir
+    } catch (Exception e) {
+    }
+    classifier = 'javadoc'
+}
+
 afterEvaluate {
 
     publishing {
         publications {
+//            // 本地仓库位于USER_HOME/.m2/repository
+//            mavenLocal(){}
             maven(MavenPublication) {
                 // Applies the component for the debug build variant.
                 try {
@@ -39,12 +50,13 @@ afterEvaluate {
                 version = version
 
                 artifact sourceJar
+                artifact javadocJar
             }
         }
 
         repositories {
             maven {
-//                // 发布到本次仓库中
+////                // 发布到本次仓库中
 //                url = uri('../repo')
 
                 // 发布远程仓库中
