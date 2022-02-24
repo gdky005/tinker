@@ -1,34 +1,110 @@
-apply from: rootProject.file('gradle/WeChatPublish.gradle')
+// 新增发布到远程私有仓库中
+apply plugin: 'maven-publish'
 
-def checkAndGetOption(name) {
-    if (!project.hasProperty(name)) {
-        throw new GradleException("Please specify '$name' option in gradle project properties.")
+// 版本号
+version = '1.0.8'
+
+def serverGroupId = 'com.autohome.svideo.tinker.plugin'
+def serverArtifactId = 'svideo_tinker_plugin'
+
+// 跟踪所有Components
+task comps {
+    afterEvaluate {
+//        println("Components: " + components*.name)
+        println("Components: " + sourceSets*.name)
     }
-    return project[name]
 }
 
-wechatPublish {
-    pom {
-        name = checkAndGetOption('POM_NAME')
-        description = checkAndGetOption('POM_DESCRIPTION')
-        url = checkAndGetOption('POM_URL')
+task sourceJar(type: Jar) {
+    try {
+        from sourceSets.main.allJava
+    } catch (Exception e) {
+    }
+    archiveClassifier = "sources"
+}
 
-        scm {
-            url = checkAndGetOption('POM_SCM_URL')
-        }
+afterEvaluate {
 
-        licenses {
-            license {
-                name = checkAndGetOption('POM_LICENCE_NAME')
-                url = checkAndGetOption('POM_LICENCE_URL')
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                // Applies the component for the debug build variant.
+                try {
+                    from components.java
+                } catch (Exception e) {
+                    from components.debug //Could not get unknown property 'debug' for SoftwareComponentInternal set of type org.gradle.api.internal.component.DefaultSoftwareComponentContainer.
+                }
+                groupId = serverGroupId
+                artifactId = serverArtifactId
+                version = version
+
+                artifact sourceJar
             }
         }
 
-        developers {
-            developer {
-                id = checkAndGetOption('POM_DEVELOPER_ID')
-                name = checkAndGetOption('POM_DEVELOPER_NAME')
+        repositories {
+            maven {
+//                // 发布到本次仓库中
+//                url = uri('../repo')
+
+                // 发布远程仓库中
+                allowInsecureProtocol = true
+
+                Properties properties = new Properties()
+                properties.load(project.rootProject.file('local.properties').newDataInputStream())
+                def mUserName=properties.getProperty('userName')
+                def mPassword = properties.getProperty('password')
+                def mMvn_android_release_url = properties.getProperty('mvn_android_release_url')
+
+//                println("repositories.maven mUserName=" + mUserName)
+//                println("repositories.maven mPassword=" + mPassword)
+//                println("repositories.maven mMvn_android_release_url=" + mMvn_android_release_url)
+
+                url = mMvn_android_release_url
+                // 仓库用户名密码
+                credentials {
+                    username=mUserName
+                    password=mPassword
+                }
             }
         }
     }
 }
+
+
+
+// 下面的是 腾讯默认的发布
+//apply from: rootProject.file('gradle/WeChatPublish.gradle')
+//
+//def checkAndGetOption(name) {
+//    if (!project.hasProperty(name)) {
+//        throw new GradleException("Please specify '$name' option in gradle project properties.")
+//    }
+//    return project[name]
+//}
+//
+//wechatPublish {
+//    pom {
+//        name = checkAndGetOption('POM_NAME')
+//        description = checkAndGetOption('POM_DESCRIPTION')
+//        url = checkAndGetOption('POM_URL')
+//
+//        scm {
+//            url = checkAndGetOption('POM_SCM_URL')
+//        }
+//
+//        licenses {
+//            license {
+//                name = checkAndGetOption('POM_LICENCE_NAME')
+//                url = checkAndGetOption('POM_LICENCE_URL')
+//            }
+//        }
+//
+//        developers {
+//            developer {
+//                id = checkAndGetOption('POM_DEVELOPER_ID')
+//                name = checkAndGetOption('POM_DEVELOPER_NAME')
+//            }
+//        }
+//    }
+//}
