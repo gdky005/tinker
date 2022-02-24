@@ -2,10 +2,10 @@
 apply plugin: 'maven-publish'
 
 // 版本号
-version = '1.0.9'
+version = VERSION
 
-def serverGroupId = 'com.autohome.svideo.tinker.plugin'
-def serverArtifactId = 'svideo_tinker_plugin'
+def serverGroupId = 'com.autohome.svideo.tinker'
+def serverArtifactId = POM_ARTIFACT_ID
 
 // 跟踪所有Components
 task comps {
